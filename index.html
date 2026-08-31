@@ -2,20 +2,26 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
   <title>AR TEST</title>
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
+      padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #000;
+      background: transparent;
     }
 
     #startButton {
@@ -25,10 +31,10 @@
       bottom: 40px;
       transform: translateX(-50%);
       padding: 16px 28px;
-      border: 0;
+      border: none;
       border-radius: 30px;
-      background: #fff;
-      color: #000;
+      background: white;
+      color: black;
       font-size: 16px;
       font-weight: bold;
     }
@@ -36,14 +42,16 @@
     #message {
       position: fixed;
       z-index: 9998;
-      top: 20px;
+      top: 25px;
       left: 50%;
       transform: translateX(-50%);
       width: 90%;
       text-align: center;
       color: white;
       font-size: 16px;
-      text-shadow: 0 1px 4px #000;
+      font-weight: bold;
+      text-shadow: 0 2px 5px black;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -51,12 +59,13 @@
 <body>
 
   <div id="message">
-    ARをスタートしてください
+    「ARをスタート」を押してください
   </div>
 
   <button id="startButton">
     ARをスタート
   </button>
+
 
   <a-scene
     mindar-image="
@@ -68,82 +77,175 @@
       missTolerance: 5;
     "
     color-space="sRGB"
-    renderer="colorManagement: true;"
+    renderer="
+      colorManagement: true;
+      alpha: true;
+      antialias: true;
+    "
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
     embedded
   >
 
+    <!-- 素材 -->
     <a-assets>
+
       <video
         id="arVideo"
-        src="./video.MOV"
+        src="./video.mp4"
         preload="auto"
         loop
         muted
         playsinline
         webkit-playsinline
-      ></video>
+        crossorigin="anonymous">
+      </video>
+
     </a-assets>
 
+
+    <!-- カメラ -->
     <a-camera
       position="0 0 0"
-      look-controls="enabled: false"
-    ></a-camera>
+      look-controls="enabled: false">
+    </a-camera>
 
+
+    <!-- 認識ターゲット -->
     <a-entity
       id="target"
-      mindar-image-target="targetIndex: 0"
-    >
+      mindar-image-target="targetIndex: 0">
 
+
+      <!-- 動画 -->
       <a-video
+        id="videoPlane"
         src="#arVideo"
         position="0 0 0.01"
         width="1"
         height="1.7778"
-      ></a-video>
+        material="
+          shader: flat;
+          transparent: true;
+          side: double;
+        ">
+      </a-video>
+
 
     </a-entity>
 
   </a-scene>
 
+
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+
       const sceneEl = document.querySelector("a-scene");
       const targetEl = document.querySelector("#target");
       const videoEl = document.querySelector("#arVideo");
-      const buttonEl = document.querySelector("#startButton");
-      const messageEl = document.querySelector("#message");
 
-      buttonEl.addEventListener("click", async () => {
+      const startButton =
+        document.querySelector("#startButton");
+
+      const message =
+        document.querySelector("#message");
+
+
+      /*
+       * ARスタート
+       */
+      startButton.addEventListener("click", async () => {
+
         try {
+
+          message.textContent =
+            "ARを準備しています…";
+
+
+          /*
+           * iPhone Safari対策
+           *
+           * ユーザー操作中に一度video.play()を
+           * 実行して再生許可を取得する
+           */
           await videoEl.play();
+
           videoEl.pause();
           videoEl.currentTime = 0;
 
-          await sceneEl.systems["mindar-image-system"].start();
 
-          buttonEl.style.display = "none";
-          messageEl.textContent = "ターゲット画像を映してください";
+          /*
+           * MindAR起動
+           */
+          const mindarSystem =
+            sceneEl.systems["mindar-image-system"];
+
+          await mindarSystem.start();
+
+
+          startButton.style.display = "none";
+
+          message.textContent =
+            "ターゲット画像を映してください";
+
+
         } catch (error) {
-          console.error(error);
-          messageEl.textContent = "ARの開始に失敗しました";
+
+          console.error("AR START ERROR:", error);
+
+          message.textContent =
+            "ARを開始できませんでした";
+
         }
+
       });
 
-      targetEl.addEventListener("targetFound", () => {
-        messageEl.textContent = "認識しました！";
-        videoEl.currentTime = 0;
 
-        videoEl.play().catch(error => {
-          console.error(error);
-        });
+
+      /*
+       * ターゲットを認識
+       */
+      targetEl.addEventListener("targetFound", async () => {
+
+        console.log("TARGET FOUND");
+
+        message.textContent =
+          "認識しました！";
+
+
+        try {
+
+          videoEl.currentTime = 0;
+
+          await videoEl.play();
+
+        } catch (error) {
+
+          console.error(
+            "VIDEO PLAY ERROR:",
+            error
+          );
+
+        }
+
       });
 
+
+
+      /*
+       * ターゲットを見失った
+       */
       targetEl.addEventListener("targetLost", () => {
-        messageEl.textContent = "ターゲット画像を映してください";
+
+        console.log("TARGET LOST");
+
+        message.textContent =
+          "ターゲット画像を映してください";
+
         videoEl.pause();
+
       });
+
     });
   </script>
 

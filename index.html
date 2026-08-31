@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
@@ -9,7 +10,10 @@
 
   <title>3D AR TEST</title>
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
@@ -85,10 +89,12 @@
   >
 
     <a-assets>
+
       <a-asset-item
         id="personModel"
         src="./person.glb">
       </a-asset-item>
+
     </a-assets>
 
     <a-camera
@@ -101,12 +107,13 @@
       mindar-image-target="targetIndex: 0"
     >
 
+      <!-- 3D人物 -->
       <a-gltf-model
         id="person"
         src="#personModel"
         position="0 0 0.1"
         rotation="0 0 0"
-        scale="0.15 0.15 0.15">
+        scale="1 1 1">
       </a-gltf-model>
 
     </a-entity>
@@ -135,7 +142,7 @@
           startButton.style.display = "none";
 
           message.textContent =
-            "ターゲット画像を映してください";
+            "QRコードを映してください";
 
         } catch (error) {
 
@@ -162,7 +169,7 @@
         console.log("TARGET LOST");
 
         message.textContent =
-          "ターゲット画像を映してください";
+          "QRコードを映してください";
 
       });
 

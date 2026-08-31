@@ -3,37 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR動画テスト</title>
+  <title>AR TEST</title>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+  <!-- MindAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
   <style>
     body {
       margin: 0;
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-      text-align: center;
+      overflow: hidden;
     }
 
-    h2 {
-      margin-top: 30px;
-    }
-
-    video {
-      width: 90%;
-      max-width: 500px;
-      margin-top: 20px;
+    #startButton {
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      padding: 16px 28px;
+      border: none;
+      border-radius: 30px;
+      background: #ffffff;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,.25);
     }
   </style>
 </head>
 
 <body>
 
-  <h2>動画テスト</h2>
-  <p>動画が再生できれば成功！</p>
+<button id="startButton">ARをスタート</button>
 
-  <video controls playsinline>
-    <source src="video.MOV" type="video/quicktime">
-    動画を再生できません。
-  </video>
+<a-scene
+  mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+  color-space="sRGB"
+  renderer="colorManagement: true, physicallyCorrectLights"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+
+  <a-assets>
+    <video
+      id="arVideo"
+      src="./video.MOV"
+      preload="auto"
+      loop
+      muted
+      playsinline
+      webkit-playsinline>
+    </video>
+  </a-assets>
+
+  <a-camera
+    position="0 0 0"
+    look-controls="enabled: false">
+  </a-camera>
+
+  <a-entity
+    id="target"
+    mindar-image-target="targetIndex: 0">
+
+    <a-video
+      src="#arVideo"
+      position="0 0 0.01"
+      width="1"
+      height="1.333">
+    </a-video>
+
+  </a-entity>
+
+</a-scene>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const sceneEl = document.querySelector("a-scene");
+    const target = document.querySelector("#target");
+    const video = document.querySelector("#arVideo");
+    const button = document.querySelector("#startButton");
+
+    button.addEventListener("click", async () => {
+
+      await sceneEl.systems["mindar-image-system"].start();
+
+      button.style.display = "none";
+
+    });
+
+    target.addEventListener("targetFound", () => {
+
+      console.log("写真を認識しました");
+
+      video.play().catch(error => {
+        console.log(error);
+      });
+
+    });
+
+    target.addEventListener("targetLost", () => {
+
+      console.log("写真を見失いました");
+
+      video.pause();
+
+    });
+
+  });
+</script>
 
 </body>
 </html>

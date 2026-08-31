@@ -3,10 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR TEST</title>
+  <title>AR動画テスト</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 30px;
+    }
+
+    video {
+      width: 90%;
+      max-width: 500px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>ARテスト成功！</h1>
-  <p>この画面がスマホで表示できればOKです。</p>
+
+  <h2>動画テスト</h2>
+  <p>動画が再生できれば成功！</p>
+
+  <video controls playsinline>
+    <source src="video.MOV" type="video/quicktime">
+    動画を再生できません。
+  </video>
+
 </body>
 </html>

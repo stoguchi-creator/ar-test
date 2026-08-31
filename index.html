@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR TEST</title>
+
+  <title>QR AR TEST</title>
 
   <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -12,9 +13,13 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
+    html,
     body {
       margin: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background: #000;
     }
 
     #startButton {
@@ -24,95 +29,137 @@
       bottom: 40px;
       transform: translateX(-50%);
       padding: 16px 28px;
-      border: none;
+      border: 0;
       border-radius: 30px;
-      background: #ffffff;
+      background: white;
+      color: black;
       font-size: 16px;
       font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0,0,0,.25);
+    }
+
+    #message {
+      position: fixed;
+      z-index: 9998;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      text-align: center;
+      color: white;
+      font-size: 16px;
+      text-shadow: 0 1px 4px black;
     }
   </style>
 </head>
 
 <body>
 
-<button id="startButton">ARをスタート</button>
+  <div id="message">
+    「ARをスタート」を押してQRコードを映してください
+  </div>
 
-<a-scene
-  mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
-  color-space="sRGB"
-  renderer="colorManagement: true, physicallyCorrectLights"
-  vr-mode-ui="enabled: false"
-  device-orientation-permission-ui="enabled: false">
+  <button id="startButton">
+    ARをスタート
+  </button>
 
-  <a-assets>
-    <video
-      id="arVideo"
-      src="./video.MOV"
-      preload="auto"
-      loop
-      muted
-      playsinline
-      webkit-playsinline>
-    </video>
-  </a-assets>
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets%20(1).mind; autoStart: false;"
+    color-space="sRGB"
+    renderer="colorManagement: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
 
-  <a-camera
-    position="0 0 0"
-    look-controls="enabled: false">
-  </a-camera>
+    <a-assets>
 
-  <a-entity
-    id="target"
-    mindar-image-target="targetIndex: 0">
+      <video
+        id="arVideo"
+        src="./video.MOV"
+        preload="auto"
+        loop
+        muted
+        playsinline
+        webkit-playsinline>
+      </video>
 
-    <a-video
-      src="#arVideo"
-      position="0 0 0.01"
-      width="1"
-      height="1.333">
-    </a-video>
+    </a-assets>
 
-  </a-entity>
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false">
+    </a-camera>
 
-</a-scene>
+    <a-entity
+      id="target"
+      mindar-image-target="targetIndex: 0">
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
+      <a-video
+        src="#arVideo"
+        position="0 0 0.01"
+        width="1"
+        height="1.7778">
+      </a-video>
 
-    const sceneEl = document.querySelector("a-scene");
-    const target = document.querySelector("#target");
-    const video = document.querySelector("#arVideo");
-    const button = document.querySelector("#startButton");
+    </a-entity>
 
-    button.addEventListener("click", async () => {
+  </a-scene>
 
-      await sceneEl.systems["mindar-image-system"].start();
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
 
-      button.style.display = "none";
+      const scene = document.querySelector("a-scene");
+      const target = document.querySelector("#target");
+      const video = document.querySelector("#arVideo");
+      const button = document.querySelector("#startButton");
+      const message = document.querySelector("#message");
 
-    });
+      button.addEventListener("click", async () => {
 
-    target.addEventListener("targetFound", () => {
+        try {
 
-      console.log("写真を認識しました");
+          // iPhoneで動画再生を許可させるため、一度再生を試す
+          await video.play();
+          video.pause();
+          video.currentTime = 0;
 
-      video.play().catch(error => {
-        console.log(error);
+          // MindARスタート
+          await scene.systems["mindar-image-system"].start();
+
+          button.style.display = "none";
+          message.textContent = "QRコードをカメラに映してください";
+
+        } catch (error) {
+
+          console.error(error);
+          message.textContent = "ARを開始できませんでした";
+
+        }
+
+      });
+
+
+      target.addEventListener("targetFound", () => {
+
+        message.textContent = "QRコードを認識しました！";
+
+        video.currentTime = 0;
+
+        video.play().catch(error => {
+          console.error(error);
+        });
+
+      });
+
+
+      target.addEventListener("targetLost", () => {
+
+        message.textContent = "QRコードをカメラに映してください";
+
+        video.pause();
+
       });
 
     });
-
-    target.addEventListener("targetLost", () => {
-
-      console.log("写真を見失いました");
-
-      video.pause();
-
-    });
-
-  });
-</script>
+  </script>
 
 </body>
 </html>
